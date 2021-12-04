@@ -53,4 +53,4 @@ require (
 	gotest.tools/v3 v3.0.3 // indirect
 )
 
-// replace github.com/alien4cloud/alien4cloud-go-client/v3 => /home/a454241/workspaces/ystia/alien4cloud-go-client
+// replace github.com/alien4cloud/alien4cloud-go-client/v3 => /path/to/alien4cloud-go-client
