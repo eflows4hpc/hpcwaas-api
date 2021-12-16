@@ -16,3 +16,10 @@ type Execution struct {
 	Status  string                 `json:"status"`
 	Outputs map[string]interface{} `json:"outputs,omitempty"`
 }
+
+// SSHKey is the response structure of a CreateKey operation for a given user
+//
+// The response contains only the public key, private key is never disclosed
+type SSHKey struct {
+	PublicKey string `json:"public_key"`
+}

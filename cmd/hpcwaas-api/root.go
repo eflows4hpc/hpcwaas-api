@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/eflows4hpc/hpcwaas-api/pkg/managers/a4c"
+	"github.com/eflows4hpc/hpcwaas-api/pkg/managers/vault"
 	"github.com/eflows4hpc/hpcwaas-api/pkg/rest"
 )
 
@@ -77,6 +78,14 @@ const a4cCAFileFlagName = "a4c_ca_file"
 const a4cCAFileConfigName = "alien_config.ca_file"
 const a4cSkipSecureFlagName = "a4c_skip_secure"
 const a4cSkipSecureConfigName = "alien_config.skip_secure"
+const vaultAddressFlagName = "vault_address"
+const vaultAddressConfigName = "vault_config.address"
+const vaultRoleIDFlagName = "vault_role_id"
+const vaultRoleIDConfigName = "vault_config.role_id"
+const vaultSecretIDFlagName = "vault_secret_id"
+const vaultSecretIDConfigName = "vault_config.secret_id"
+const vaultIsSecretWrappedFlagName = "vault_is_secret_wrapped"
+const vaultIsSecretWrappedConfigName = "vault_config.is_secret_wrapped"
 
 /*
 	Address    string `mapstructure:"address"`
@@ -104,6 +113,12 @@ func init() {
 	rootCmd.PersistentFlags().String(a4cCAFileFlagName, "", "CA File to use to validate SSL certificates")
 	rootCmd.PersistentFlags().Bool(a4cSkipSecureFlagName, false, "Either or not to skip SSL certificates validation")
 
+	// Vault config flag
+	rootCmd.PersistentFlags().String(vaultAddressFlagName, vault.DefaultAddress, "Address of the Vault REST API")
+	rootCmd.PersistentFlags().String(vaultRoleIDFlagName, "", "RoleID to connect to Vault")
+	rootCmd.PersistentFlags().String(vaultSecretIDFlagName, "", "SecretID to connect to Vault")
+	rootCmd.PersistentFlags().Bool(vaultIsSecretWrappedFlagName, false, "Either or not the provided secret ID is wrapped")
+
 	// Global flags/config binding
 	viper.BindPFlag(listenAddressFlagName, rootCmd.PersistentFlags().Lookup(listenAddressFlagName))
 
@@ -113,6 +128,12 @@ func init() {
 	viper.BindPFlag(a4cPasswordConfigName, rootCmd.PersistentFlags().Lookup(a4cPasswordFlagName))
 	viper.BindPFlag(a4cCAFileConfigName, rootCmd.PersistentFlags().Lookup(a4cCAFileFlagName))
 	viper.BindPFlag(a4cSkipSecureConfigName, rootCmd.PersistentFlags().Lookup(a4cSkipSecureFlagName))
+
+	// Vault config
+	viper.BindPFlag(vaultAddressConfigName, rootCmd.PersistentFlags().Lookup(vaultAddressFlagName))
+	viper.BindPFlag(vaultRoleIDConfigName, rootCmd.PersistentFlags().Lookup(vaultRoleIDFlagName))
+	viper.BindPFlag(vaultSecretIDConfigName, rootCmd.PersistentFlags().Lookup(vaultSecretIDFlagName))
+	viper.BindPFlag(vaultIsSecretWrappedConfigName, rootCmd.PersistentFlags().Lookup(vaultIsSecretWrappedFlagName))
 
 	//Environment Variables
 	viper.SetEnvPrefix("HWA") // HWA == HpcWaasApi
@@ -127,6 +148,11 @@ func init() {
 	viper.BindEnv(a4cPasswordConfigName)
 	viper.BindEnv(a4cCAFileConfigName)
 	viper.BindEnv(a4cSkipSecureConfigName)
+	// Vault env
+	viper.BindEnv(vaultAddressConfigName)
+	viper.BindEnv(vaultRoleIDConfigName)
+	viper.BindEnv(vaultSecretIDConfigName)
+	viper.BindEnv(vaultIsSecretWrappedConfigName)
 
 	// Global defaults
 	viper.SetDefault(listenAddressFlagName, rest.DefaultListenAddress)
@@ -135,6 +161,10 @@ func init() {
 	viper.SetDefault(a4cAddressConfigName, a4c.DefaultAddress)
 	viper.SetDefault(a4cUserConfigName, a4c.DefaultUser)
 	viper.SetDefault(a4cPasswordConfigName, a4c.DefaultPassword)
+
+	// Vault defaults
+	viper.SetDefault(vaultAddressConfigName, vault.DefaultAddress)
+
 }
 
 // initConfig reads in config file and ENV variables if set.

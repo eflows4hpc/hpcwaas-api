@@ -10,7 +10,9 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/hpcwaas-api",
-            "args": ["--a4c_address", "https://134.94.199.39", "--a4c_skip_secure", "--a4c_password", "b6Ug5YUSDG2YsdfnjGyF"]
+            "args": ["--a4c_address", "https://134.94.199.39", "--a4c_skip_secure", "--a4c_password", "b6Ug5YUSDG2YsdfnjGyF",
+                "--vault_address", "http://127.0.0.1:8200", "--vault_role_id", "00fc277e-6c31-d831-3151-74439ed87376",
+                "--vault_secret_id","s.pP6cPj5cWN3PuC0gr0NV85IJ", "--vault_is_secret_wrapped", "true"]
         }
     ]
 }

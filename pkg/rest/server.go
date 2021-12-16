@@ -1,15 +1,19 @@
 package rest
 
 import (
+	"context"
+
 	"github.com/eflows4hpc/hpcwaas-api/pkg/managers/a4c"
+	"github.com/eflows4hpc/hpcwaas-api/pkg/managers/vault"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
 	Config *Config
 
-	router     *gin.Engine
-	a4cManager a4c.Manager
+	router       *gin.Engine
+	a4cManager   a4c.Manager
+	vaultManager vault.Manager
 }
 
 func (s *Server) StartServer() error {
@@ -19,6 +23,11 @@ func (s *Server) StartServer() error {
 	if err != nil {
 		return err
 	}
+	s.vaultManager, err = vault.GetManager(context.Background(), s.Config.VaultConfig)
+	if err != nil {
+		return err
+	}
+	defer vault.CloseRenewers()
 
 	s.router = gin.Default()
 	s.setupRoutes()
