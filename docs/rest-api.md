@@ -49,7 +49,7 @@ Content-Type: application/json
 {
   "workflows": [
     "workflow1",
-    "workflow2
+    "workflow2"
   ]
 }
 ```
