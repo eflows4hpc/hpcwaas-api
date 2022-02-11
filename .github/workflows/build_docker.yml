@@ -25,7 +25,9 @@ jobs:
     permissions:
       contents: read
       packages: write
-
+    strategy:
+      matrix:
+        bin: ["hpcwaas-api", "waas"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -41,7 +43,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ matrix.bin }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -54,3 +56,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BIN=${{ matrix.bin }}

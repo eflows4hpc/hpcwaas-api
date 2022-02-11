@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -20,16 +21,51 @@ import (
 type HTTPClient interface {
 	NewRequest(ctx context.Context, method, path string, body io.Reader) (*http.Request, error)
 	Do(req *http.Request) (*http.Response, error)
+
+	Workflows() WorkflowsService
+	Executions() ExecutionsService
+	Users() UsersService
+}
+
+func setupTLSConfig(client *client, cc Configuration, url *url.URL) error {
+
+	url.Scheme = "https"
+	apiHost, _, err := urlx.SplitHostPort(url)
+	if err != nil {
+		return errors.Wrap(err, "Malformed API URL")
+	}
+
+	tlsConfig := &tls.Config{ServerName: apiHost}
+	if cc.CertFile != "" && cc.KeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(cc.CertFile, cc.KeyFile)
+		if err != nil {
+			return errors.Wrap(err, "Failed to load TLS certificates")
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+	if cc.CAFile != "" || cc.CAPath != "" {
+		cfg := &rootcerts.Config{
+			CAFile: cc.CAFile,
+			CAPath: cc.CAPath,
+		}
+		rootcerts.ConfigureTLS(tlsConfig, cfg)
+		tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
+	}
+	if cc.SkipTLSVerify {
+		tlsConfig.InsecureSkipVerify = true
+	}
+
+	tr := &http.Transport{
+		TLSClientConfig: tlsConfig,
+	}
+	client.Client.Transport = tr
+	return nil
 }
 
 // GetClient returns a HTTP Client
 func GetClient(cc Configuration) (HTTPClient, error) {
 	apiURL := cc.APIURL
 	apiURL = strings.TrimRight(apiURL, "/")
-	caFile := cc.CAFile
-	caPath := cc.CAPath
-	certFile := cc.CertFile
-	keyFile := cc.KeyFile
 
 	httpClient := cc.HttpClient
 	if httpClient == nil {
@@ -37,57 +73,48 @@ func GetClient(cc Configuration) (HTTPClient, error) {
 			Timeout: 1 * time.Minute,
 		}
 	}
+
+	url, err := urlx.ParseWithDefaultScheme(apiURL, "https")
+	if err != nil {
+		return nil, errors.Wrap(err, "Malformed API URL")
+	}
+
 	client := &client{
-		baseURL: "http://" + apiURL,
-		Client:  httpClient,
-	}
-	if cc.SSLEnabled || cc.CAFile != "" || cc.CAPath != "" || (certFile != "" && keyFile != "") {
-		url, err := urlx.Parse(apiURL)
-		if err != nil {
-			return nil, errors.Wrap(err, "Malformed API URL")
-		}
-		apiHost, _, err := urlx.SplitHostPort(url)
-		if err != nil {
-			return nil, errors.Wrap(err, "Malformed API URL")
-		}
-
-		tlsConfig := &tls.Config{ServerName: apiHost}
-		if certFile != "" && keyFile != "" {
-			cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-			if err != nil {
-				return nil, errors.Wrap(err, "Failed to load TLS certificates")
-			}
-			tlsConfig.Certificates = []tls.Certificate{cert}
-		}
-		if caFile != "" || caPath != "" {
-			cfg := &rootcerts.Config{
-				CAFile: caFile,
-				CAPath: caPath,
-			}
-			rootcerts.ConfigureTLS(tlsConfig, cfg)
-			tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
-		}
-		if cc.SkipTLSVerify {
-			tlsConfig.InsecureSkipVerify = true
-			fmt.Println("Warning : usage of skip_tls_verify is not recommended for production and may expose to MITM attack")
-		}
-
-		tr := &http.Transport{
-			TLSClientConfig: tlsConfig,
-		}
-		client.baseURL = "https://" + apiURL
-		httpClient.Transport = tr
-		client.Client = httpClient
-
+		Client: httpClient,
 	}
 
+	if strings.ToLower(url.Scheme) == "https" || cc.CAFile != "" || cc.CAPath != "" || (cc.CertFile != "" && cc.KeyFile != "") {
+		err := setupTLSConfig(client, cc, url)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to setup TLS config")
+		}
+	}
+	client.baseURL = url.String()
+
+	client.workflows = &workflowsService{client: client}
+	client.executions = &executionsService{client: client}
+	client.users = &usersService{client: client}
 	return client, nil
 }
 
 // client is the HTTP client structure
 type client struct {
 	*http.Client
-	baseURL string
+	baseURL    string
+	workflows  WorkflowsService
+	executions ExecutionsService
+	users      UsersService
+}
+
+func (c *client) Workflows() WorkflowsService {
+	return c.workflows
+}
+
+func (c *client) Executions() ExecutionsService {
+	return c.executions
+}
+func (c *client) Users() UsersService {
+	return c.users
 }
 
 // NewRequest returns a new HTTP request
