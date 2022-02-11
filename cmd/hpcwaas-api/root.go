@@ -38,13 +38,11 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "hpcwaas-api",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "A REST API for managing HPC Workflows as a Service",
+	Long: `A REST API for managing HPC Workflows as a Service.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+This is the server side of the HPC Workflows as a Service (HPCWAAS) API.
+It interacts with Hashicorp Vault to manage credentials and with Alien4Cloud to manage the execution of HPC Workflows.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		conf := &rest.Config{}

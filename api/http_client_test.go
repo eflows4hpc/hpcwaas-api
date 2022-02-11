@@ -17,16 +17,15 @@ func TestGetClient(t *testing.T) {
 		//		{"simpleConfig", Configuration{}, false, ""},
 		{"simpleTLSConfig", Configuration{
 			APIURL:        "my.com",
-			SSLEnabled:    true,
 			SkipTLSVerify: true,
 			KeyFile:       "testdata/comp.key",
 			CertFile:      "testdata/comp.pem",
 			CAFile:        "testdata/ca.pem",
 			CAPath:        "testdata",
 		}, false, ""},
-		{"badApiURL", Configuration{APIURL: "thisIsBad!!!", SSLEnabled: true}, true, "Malformed API URL"},
-		{"badApiURLPort", Configuration{APIURL: "thisIsBad:very", SSLEnabled: true}, true, "Malformed API URL"},
-		{"badCerts", Configuration{APIURL: "my.com", SSLEnabled: true, KeyFile: "missing", CertFile: "missing"}, true, "Failed to load TLS certificates"},
+		{"badApiURL", Configuration{APIURL: "thisIsBad!!!"}, true, "Malformed API URL"},
+		{"badApiURLPort", Configuration{APIURL: "thisIsBad:very"}, true, "Malformed API URL"},
+		{"badCerts", Configuration{APIURL: "my.com", KeyFile: "missing", CertFile: "missing"}, true, "Failed to load TLS certificates"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

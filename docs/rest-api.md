@@ -101,7 +101,7 @@ Content-Type: application/json
 ```json
 {
   "id": "<execution_id>",
-  "status": "RUNNING/SUCCESS/FAILED",
+  "status": "RUNNING/SUCCESS/FAILED/CANCELLING/CANCELLED",
   "outputs": {
     "output1": "",
     "output2": ""
@@ -133,7 +133,7 @@ The public key can not be seen again.
 
 ##### Request
 
-`POST /users/<user_id>/ssh-key`
+`POST /users/<user_id>/ssh_key`
 
 ##### Response
 
