@@ -18,12 +18,15 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
+	"syscall"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/term"
 
 	"github.com/eflows4hpc/hpcwaas-api/api"
 )
@@ -51,6 +54,11 @@ It interacts with the API to manage the execution of HPC Workflows.`,
 		if err != nil {
 			return errors.Wrapf(err, "failed to parse config file: %q", viper.ConfigFileUsed())
 		}
+
+		if clientConfig.User != "" {
+			setupBasicAuthUserPass(clientConfig)
+		}
+
 		if output != JSONOutput && output != TextOutput {
 			return usageError{Mes: "Only \"json\" and \"text\" output formats are supported."}
 		}
@@ -73,6 +81,19 @@ It interacts with the API to manage the execution of HPC Workflows.`,
 	},
 }
 
+func setupBasicAuthUserPass(clientConfig *api.Configuration) {
+	if !strings.Contains(clientConfig.User, ":") {
+		fmt.Print("Authentication password: ")
+		passBytes, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			fmt.Printf("\n%v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println()
+		clientConfig.User = fmt.Sprintf("%s:%s", clientConfig.User, strings.TrimSpace(string(passBytes)))
+	}
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -88,6 +109,7 @@ const keyFileFlagName = "key_file"
 const certFileFlagName = "cert_file"
 const caFileFlagName = "ca_file"
 const caPathFlagName = "ca_path"
+const userFlagName = "user"
 
 func init() {
 	cobra.OnInitialize(initConfig)
@@ -99,12 +121,21 @@ func init() {
 	// Global flags
 	rootCmd.PersistentFlags().StringVarP(&output, "output", "o", DefaultDisplayOutput, "Output format either \"text\" or \"json\".")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.hpcwaas-api.yaml)")
-	rootCmd.PersistentFlags().StringP(apiURLFlagName, "", api.DefaultAPIAddress, "The default URL used to connect to the API")
+	rootCmd.PersistentFlags().String(apiURLFlagName, api.DefaultAPIAddress, "The default URL used to connect to the API")
 	rootCmd.PersistentFlags().Bool(skipTLSVerifyFlagName, false, "Either or not to skip SSL certificates validation")
 	rootCmd.PersistentFlags().String(caFileFlagName, "", "CA File to use to validate SSL certificates")
 	rootCmd.PersistentFlags().String(caPathFlagName, "", "directory path to CA Files to use to validate SSL certificates")
 	rootCmd.PersistentFlags().String(keyFileFlagName, "", "TLS key file to use to authenticate to the API")
 	rootCmd.PersistentFlags().String(certFileFlagName, "", "TLS cert file to use to authenticate to the API")
+	rootCmd.PersistentFlags().StringP(userFlagName, "u", "", `<user[:password]>
+
+Specify the user name and password to use for server authentication using the HTTP Basic Authentication protocol.
+
+If the password is not specified, it will be prompted for.
+
+The user name and passwords are split up on the first colon, which makes it impossible to use a colon in the user name.
+However, the password can contains colons.
+`)
 
 	// Global flags/config binding
 	viper.BindPFlag(apiURLFlagName, rootCmd.PersistentFlags().Lookup(apiURLFlagName))
@@ -113,6 +144,7 @@ func init() {
 	viper.BindPFlag(caPathFlagName, rootCmd.PersistentFlags().Lookup(caPathFlagName))
 	viper.BindPFlag(keyFileFlagName, rootCmd.PersistentFlags().Lookup(keyFileFlagName))
 	viper.BindPFlag(certFileFlagName, rootCmd.PersistentFlags().Lookup(certFileFlagName))
+	viper.BindPFlag(userFlagName, rootCmd.PersistentFlags().Lookup(userFlagName))
 
 	//Environment Variables
 	viper.SetEnvPrefix("HW") // HW == HpcWaas
@@ -125,6 +157,7 @@ func init() {
 	viper.BindEnv(caPathFlagName)
 	viper.BindEnv(keyFileFlagName)
 	viper.BindEnv(certFileFlagName)
+	viper.BindEnv(userFlagName)
 
 	// Global defaults
 	viper.SetDefault(apiURLFlagName, api.DefaultAPIAddress)

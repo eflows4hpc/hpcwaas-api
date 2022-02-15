@@ -74,7 +74,7 @@ func GetClient(cc Configuration) (HTTPClient, error) {
 		}
 	}
 
-	url, err := urlx.ParseWithDefaultScheme(apiURL, "https")
+	u, err := urlx.ParseWithDefaultScheme(apiURL, "https")
 	if err != nil {
 		return nil, errors.Wrap(err, "Malformed API URL")
 	}
@@ -83,13 +83,21 @@ func GetClient(cc Configuration) (HTTPClient, error) {
 		Client: httpClient,
 	}
 
-	if strings.ToLower(url.Scheme) == "https" || cc.CAFile != "" || cc.CAPath != "" || (cc.CertFile != "" && cc.KeyFile != "") {
-		err := setupTLSConfig(client, cc, url)
+	if strings.ToLower(u.Scheme) == "https" || cc.CAFile != "" || cc.CAPath != "" || (cc.CertFile != "" && cc.KeyFile != "") {
+		err := setupTLSConfig(client, cc, u)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to setup TLS config")
 		}
 	}
-	client.baseURL = url.String()
+	client.baseURL = u.String()
+
+	if cc.User != "" {
+		parts := strings.SplitN(cc.User, ":", 2)
+		if len(parts) != 2 {
+			return nil, errors.New("Invalid user format, expecting 'user:password'")
+		}
+		client.basicAuthUserPass = url.UserPassword(parts[0], parts[1])
+	}
 
 	client.workflows = &workflowsService{client: client}
 	client.executions = &executionsService{client: client}
@@ -104,6 +112,8 @@ type client struct {
 	workflows  WorkflowsService
 	executions ExecutionsService
 	users      UsersService
+
+	basicAuthUserPass *url.Userinfo
 }
 
 func (c *client) Workflows() WorkflowsService {
@@ -119,7 +129,13 @@ func (c *client) Users() UsersService {
 
 // NewRequest returns a new HTTP request
 func (c *client) NewRequest(ctx context.Context, method, path string, body io.Reader) (*http.Request, error) {
-	return http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
+	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
+	if err != nil {
+		return nil, errors.Wrap(err, "Cannot create request")
+	}
+
+	req.URL.User = c.basicAuthUserPass
+	return req, nil
 }
 
 // ReadResponse is an helper function that allow to fully read and close a response body and
