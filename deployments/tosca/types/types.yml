@@ -1,0 +1,38 @@
+tosca_definitions_version: alien_dsl_3_0_0
+
+
+metadata:
+  template_name: hpcwaas.api.containers.ansible
+  template_version: 0.0.1-SNAPSHOT
+  template_author: loicalbertin
+
+node_types:
+  prometheus.containers.ansible.nodes.Prometheus:
+    derived_from: org.ystia.docker.containers.docker.generic.nodes.GenericContainer
+    metadata:
+      icon: api-icon.png
+    properties:
+      image:
+        type: string
+        description: >
+          Repository path and tag used to create the container. If an image is not found,
+          the image will be pulled from the registry. If no tag is included, 'latest' will be used.
+        required: true
+        default: "ghcr.io/eflows4hpc/hpcwaas-api:main"
+      restart_policy:
+        type: string
+        constraints:
+          - valid_values: ["no", "on-failure", "always", "unless-stopped"]
+        default: "always"
+      published_ports:
+        type: list
+        entry_schema:
+          type: string
+        description: |
+          List of ports to publish from the container to the host.
+          Use docker CLI syntax: 8000, 9000:8000, or 0.0.0.0:9000:8000, where 8000 is a container port, 9000 is a host port, and 0.0.0.0 is a host interface.
+          Container ports must be exposed either in the Dockerfile or via the expose option.
+          A value of all will publish all exposed container ports to random host ports, ignoring any other mappings.
+        required: false
+        default:
+          - "9090:9090"

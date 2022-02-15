@@ -14,6 +14,7 @@ type Configuration struct {
 	CertFile      string `mapstructure:"cert_file"`
 	CAFile        string `mapstructure:"ca_file"`
 	CAPath        string `mapstructure:"ca_path"`
+	User          string `mapstructure:"user"`
 
 	HttpClient *http.Client
 }

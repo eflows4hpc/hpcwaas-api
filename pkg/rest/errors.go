@@ -10,6 +10,7 @@ import (
 
 func writeError(gc *gin.Context, err *api.Error) {
 	gc.JSON(err.Status, api.Errors{Errors: []*api.Error{err}})
+	gc.AbortWithStatus(err.Status)
 }
 
 var (
@@ -59,4 +60,9 @@ func newConflictRequest(message string) *api.Error {
 
 func newForbiddenRequest(message string) *api.Error {
 	return &api.Error{ID: "forbidden", Status: http.StatusForbidden, Title: "Forbidden", Detail: message}
+}
+
+func newUnauthorizedRequest(gc *gin.Context, realm string) *api.Error {
+	gc.Header("WWW-Authenticate", realm)
+	return &api.Error{ID: "unauthorized", Status: http.StatusUnauthorized, Title: "Unauthorized", Detail: realm}
 }

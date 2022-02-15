@@ -24,7 +24,8 @@ Design of workflows themself is out of the scope of this API and is done by anot
 
 ### Authentication / Authorization
 
-While this is identified as a mandatory feature. This will not be implemented in the first Minimum Viable Product (MVP).
+While this is identified as a mandatory feature, there is only an optional HTTP Basic authentication implemented in the first MVP
+(Minimum Viable Product).
 
 ### API Endpoints
 
