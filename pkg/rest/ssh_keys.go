@@ -23,10 +23,12 @@ func (s *Server) createKey(gc *gin.Context) {
 	}
 
 	keyGenReq := new(api.SSHKeyGenerationRequest)
-	err = gc.ShouldBindJSON(keyGenReq)
-	if err != nil {
-		writeError(gc, newBadRequestError(err))
-		return
+	if gc.Request.GetBody != nil {
+		err = gc.ShouldBindJSON(keyGenReq)
+		if err != nil {
+			writeError(gc, newBadRequestError(err))
+			return
+		}
 	}
 
 	if keyGenReq.MetaData == nil {
