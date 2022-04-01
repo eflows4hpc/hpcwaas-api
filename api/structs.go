@@ -17,9 +17,15 @@ type Execution struct {
 	Outputs map[string]interface{} `json:"outputs,omitempty"`
 }
 
+// SSHKeyGenerationRequest is the request structure of a CreateKey operation
+type SSHKeyGenerationRequest struct {
+	MetaData map[string]interface{} `json:"metadata,omitempty"`
+}
+
 // SSHKey is the response structure of a CreateKey operation for a given user
 //
 // The response contains only the public key, private key is never disclosed
 type SSHKey struct {
+	ID        string `json:"id"`
 	PublicKey string `json:"public_key"`
 }

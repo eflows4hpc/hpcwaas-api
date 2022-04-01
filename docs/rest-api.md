@@ -126,15 +126,29 @@ HTTP/1.1 202 Accepted
 Content-Length: 0
 ```
 
-#### Create an SSH Key Pair for a given user
+#### Create an SSH Key Pair
 
-This API endpoint allows the *end-user* to create an SSH Key Pair for a given user.
-The private key is stored in HashiCorp Vault and the public key is returned to the user.
-The public key can not be seen again.
+This API endpoint allows the *end-user* to create an SSH Key Pair and to optionally attach metadata to it.
+The private key is stored in HashiCorp Vault and the public key is returned to the user along with a randomly
+generated identifier for this key that should be used to retrieve the private key.
+The public key and the identifier can not be seen again, it should be written down carefully and kept in safe place.
 
 ##### Request
 
-`POST /users/<user_id>/ssh_key`
+`POST /ssh_keys`
+
+```json
+{
+  "metadata": {
+    "key1": "value1",
+    "key2": "value2"
+  }
+}
+```
+
+The request body is fully optional.
+`privateKey` and `publicKey` are reserved keywords and should not be used as metadata keys.
+If provided they will be silently ignored.
 
 ##### Response
 
@@ -145,6 +159,7 @@ Content-Type: application/json
 
 ```json
 {
+  "id": "<key_id>",
   "public_key": "<public_key>"
 }
 ```
