@@ -24,7 +24,7 @@ type HTTPClient interface {
 
 	Workflows() WorkflowsService
 	Executions() ExecutionsService
-	Users() UsersService
+	SSHKeys() SSHKeysService
 }
 
 func setupTLSConfig(client *client, cc Configuration, url *url.URL) error {
@@ -101,7 +101,7 @@ func GetClient(cc Configuration) (HTTPClient, error) {
 
 	client.workflows = &workflowsService{client: client}
 	client.executions = &executionsService{client: client}
-	client.users = &usersService{client: client}
+	client.sshKeys = &sshKeysService{client: client}
 	return client, nil
 }
 
@@ -111,7 +111,7 @@ type client struct {
 	baseURL    string
 	workflows  WorkflowsService
 	executions ExecutionsService
-	users      UsersService
+	sshKeys    SSHKeysService
 
 	basicAuthUserPass *url.Userinfo
 }
@@ -123,8 +123,8 @@ func (c *client) Workflows() WorkflowsService {
 func (c *client) Executions() ExecutionsService {
 	return c.executions
 }
-func (c *client) Users() UsersService {
-	return c.users
+func (c *client) SSHKeys() SSHKeysService {
+	return c.sshKeys
 }
 
 // NewRequest returns a new HTTP request

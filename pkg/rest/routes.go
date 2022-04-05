@@ -11,7 +11,7 @@ func (s *Server) setupRoutes() {
 		rootGrp.POST("/workflows/:workflow_name", s.triggerWorkflow)
 		rootGrp.GET("/executions/:execution_id", s.getExecution)
 		rootGrp.DELETE("/executions/:execution_id", s.cancelExecution)
-		rootGrp.POST("/users/:user_name/ssh_key", s.createKey)
+		rootGrp.POST("/ssh_keys", s.createKey)
 	}
 }
 
