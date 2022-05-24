@@ -2,7 +2,15 @@ package api
 
 // Workflows is the response structure of a GetWorkflows operation
 type Workflows struct {
-	Workflows []string `json:"workflows"`
+	Workflows []Workflow `json:"workflows"`
+}
+
+type Workflow struct {
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	ApplicationID   string `json:"application_id"`
+	EnvironmentID   string `json:"environment_id"`
+	EnvironmentName string `json:"environment_name"`
 }
 
 // WorkflowInputs is the payload send when triggering a workflow execution
