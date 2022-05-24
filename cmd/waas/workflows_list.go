@@ -60,10 +60,10 @@ func listWorkflows(httpClient api.HTTPClient, output string) error {
 
 func displayWorkflowsTable(workflows []api.Workflow) {
 	data := pterm.TableData{
-		{"WorkflowID", "Workflow Application", "Workflow Deployment ID", "Workflow Deployment Name", "Workflow Name"},
+		{"Workflow ID", "Workflow Name", "Application", "Environment ID", "Environment Name"},
 	}
 	for _, workflow := range workflows {
-		data = append(data, []string{workflow.ID, workflow.ApplicationID, workflow.EnvironmentID, workflow.Name, workflow.Name})
+		data = append(data, []string{workflow.ID, workflow.Name, workflow.ApplicationID, workflow.EnvironmentID, workflow.EnvironmentName})
 	}
 	pterm.DefaultTable.WithHasHeader().WithHeaderRowSeparator("*").WithRowSeparator("-").WithData(data).WithBoxed().Render()
 }
