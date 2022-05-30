@@ -49,8 +49,20 @@ Content-Type: application/json
 ```json
 {
   "workflows": [
-    "workflow1",
-    "workflow2"
+    {
+      "id": "workflow-unique-id",
+      "name": "workflow-name",
+      "application_id": "app_id",
+      "environment_id": "env_id",
+      "environment_name": "env_name"
+    },
+    {
+      "id": "workflow2-unique-id",
+      "name": "workflow2-name",
+      "application_id": "app2_id",
+      "environment_id": "env_id",
+      "environment_name": "env_name"
+    }
   ]
 }
 ```

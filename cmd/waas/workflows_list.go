@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/eflows4hpc/hpcwaas-api/api"
 	"github.com/pterm/pterm"
@@ -59,14 +58,12 @@ func listWorkflows(httpClient api.HTTPClient, output string) error {
 	return nil
 }
 
-func displayWorkflowsTable(workflows []string) {
+func displayWorkflowsTable(workflows []api.Workflow) {
 	data := pterm.TableData{
-		{"WorkflowID", "Workflow Application", "Workflow Deployment", "Workflow Name"},
+		{"Workflow ID", "Workflow Name", "Application", "Environment ID", "Environment Name"},
 	}
-	for _, workflowID := range workflows {
-		col := []string{workflowID}
-		col = append(col, strings.Split(workflowID, "@")...)
-		data = append(data, col)
+	for _, workflow := range workflows {
+		data = append(data, []string{workflow.ID, workflow.Name, workflow.ApplicationID, workflow.EnvironmentID, workflow.EnvironmentName})
 	}
 	pterm.DefaultTable.WithHasHeader().WithHeaderRowSeparator("*").WithRowSeparator("-").WithData(data).WithBoxed().Render()
 }

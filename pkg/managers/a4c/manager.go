@@ -6,11 +6,12 @@ import (
 	"sync"
 
 	"github.com/alien4cloud/alien4cloud-go-client/v3/alien4cloud"
+	"github.com/eflows4hpc/hpcwaas-api/api"
 	"github.com/pkg/errors"
 )
 
 type Manager interface {
-	GetWorkflows(ctx context.Context) ([]string, error)
+	GetWorkflows(ctx context.Context) ([]api.Workflow, error)
 	TriggerWorkflow(ctx context.Context, id string, inputs map[string]interface{}) (string, error)
 
 	GetExecution(ctx context.Context, id string) (alien4cloud.Execution, error)
@@ -55,7 +56,7 @@ func GetManager(c Config) (
 	return m, nil
 }
 
-func (m *manager) GetWorkflows(ctx context.Context) ([]string, error) {
+func (m *manager) GetWorkflows(ctx context.Context) ([]api.Workflow, error) {
 	appsSearchReq := alien4cloud.SearchRequest{
 		Size: 1000000,
 		Filters: map[string][]string{
@@ -67,7 +68,7 @@ func (m *manager) GetWorkflows(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	var ids []string
+	var ids []api.Workflow
 	for _, app := range apps {
 		var declaredWF []string
 		for _, tag := range app.Tags {
@@ -88,7 +89,13 @@ func (m *manager) GetWorkflows(ctx context.Context) ([]string, error) {
 				continue
 			}
 			for _, wf := range declaredWF {
-				ids = append(ids, strings.Join([]string{app.ID, env.ID, wf}, "@"))
+				ids = append(ids, api.Workflow{
+					ID:              strings.Join([]string{app.ID, env.ID, wf}, "@"),
+					ApplicationID:   app.ID,
+					EnvironmentID:   env.ID,
+					EnvironmentName: env.Name,
+					Name:            wf,
+				})
 			}
 		}
 	}
@@ -97,6 +104,9 @@ func (m *manager) GetWorkflows(ctx context.Context) ([]string, error) {
 
 func (m *manager) TriggerWorkflow(ctx context.Context, id string, inputs map[string]interface{}) (string, error) {
 	parts := strings.Split(id, "@")
+	if len(parts) < 3 {
+		return "", errors.Errorf("invalid workflow id %q", id)
+	}
 	appID := parts[0]
 	envID := parts[1]
 	wfID := parts[2]
