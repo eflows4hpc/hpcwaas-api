@@ -8,8 +8,13 @@ ifdef VERSION
 	LDFLAGS += -X main.version=$(VERSION)
 endif
 
+export XC_ARCH=386 amd64 arm arm64
+export XC_OS=solaris darwin freebsd linux windows
 export CGO_ENABLED=0
 export GO_BUILD=env GO111MODULE=on go build $(GO_ARGS) -ldflags "$(LDFLAGS)"
+export GOX_BUILD=env GO111MODULE=on gox -os="$(XC_OS)" -arch="$(XC_ARCH)" -osarch="!darwin/arm !darwin/arm64 !darwin/386" \
+                -output "bin/dist/{{.OS}}_{{.Arch}}/{{.Dir}}" \
+                $(GO_ARGS) -ldflags "$(LDFLAGS)"
 export GO_TEST=env GOTRACEBACK=all GO111MODULE=on go test $(GO_ARGS)
 export GO_TEST_IT=env GOTRACEBACK=all GO111MODULE=on go test -count=1 -tags=integration -v
 export GO_VET=env GO111MODULE=on go vet $(GO_ARGS)
@@ -31,7 +36,7 @@ all: fmt $(CMDS)
 #
 # Define targets for commands
 #
-$(CMDS): fmt $(SOURCES)
+$(CMDS):  fmt $(SOURCES)
 	$(GO_BUILD) -o $@ ./cmd/$(shell basename "$@")
 
 
@@ -39,6 +44,12 @@ $(CMDS): fmt $(SOURCES)
 hpcwaas-api: bin/hpcwaas-api
 waas: bin/waas
 
+dist: fmt
+	$(GOX_BUILD) ./cmd/waas
+	./scripts/dist.sh
+
+tools:
+	env GO111MODULE=on go get -tags tools
 
 fmt: generate
 	@gofmt -w -s $(GO_SOURCES)
@@ -69,7 +80,7 @@ build: all
 clean:
 	$(RM) -r bin
 
-generate:
+generate: tools
 #	@go install github.com/abice/go-enum
 	@go generate ./...
 
