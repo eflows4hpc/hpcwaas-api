@@ -8,11 +8,13 @@ ifdef VERSION
 	LDFLAGS += -X main.version=$(VERSION)
 endif
 
+export GOBIN=$(shell go env GOPATH)/bin
+
 export XC_ARCH=386 amd64 arm arm64
 export XC_OS=solaris darwin freebsd linux windows
 export CGO_ENABLED=0
 export GO_BUILD=env GO111MODULE=on go build $(GO_ARGS) -ldflags "$(LDFLAGS)"
-export GOX_BUILD=env GO111MODULE=on gox -os="$(XC_OS)" -arch="$(XC_ARCH)" -osarch="!darwin/arm !darwin/arm64 !darwin/386" \
+export GOX_BUILD=env GO111MODULE=on $(GOBIN)/gox -os="$(XC_OS)" -arch="$(XC_ARCH)" -osarch="!darwin/arm !darwin/arm64 !darwin/386" \
                 -output "bin/dist/{{.OS}}_{{.Arch}}/{{.Dir}}" \
                 $(GO_ARGS) -ldflags "$(LDFLAGS)"
 export GO_TEST=env GOTRACEBACK=all GO111MODULE=on go test $(GO_ARGS)
@@ -44,7 +46,7 @@ $(CMDS):  fmt $(SOURCES)
 hpcwaas-api: bin/hpcwaas-api
 waas: bin/waas
 
-dist: fmt
+dist: tools fmt
 	$(GOX_BUILD) ./cmd/waas
 	./scripts/dist.sh
 
