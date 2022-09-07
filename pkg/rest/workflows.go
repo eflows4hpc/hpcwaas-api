@@ -10,8 +10,12 @@ import (
 )
 
 func (s *Server) getWorkflows(gc *gin.Context) {
+	currentUsername := ""
+	if auth, ok := gc.Get(gin.AuthUserKey); ok {
+		currentUsername = auth.(AuthAccount).Username
+	}
 
-	workflows, err := s.a4cManager.GetWorkflows(gc.Request.Context())
+	workflows, err := s.a4cManager.GetWorkflows(gc.Request.Context(), currentUsername)
 	if err != nil {
 		writeError(gc, newInternalServerError(err))
 		return

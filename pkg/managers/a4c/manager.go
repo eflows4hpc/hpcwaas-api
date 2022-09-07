@@ -11,7 +11,7 @@ import (
 )
 
 type Manager interface {
-	GetWorkflows(ctx context.Context) ([]api.Workflow, error)
+	GetWorkflows(ctx context.Context, currentUsername string) ([]api.Workflow, error)
 	TriggerWorkflow(ctx context.Context, id string, inputs map[string]interface{}) (string, error)
 
 	GetExecution(ctx context.Context, id string) (alien4cloud.Execution, error)
@@ -56,7 +56,7 @@ func GetManager(c Config) (
 	return m, nil
 }
 
-func (m *manager) GetWorkflows(ctx context.Context) ([]api.Workflow, error) {
+func (m *manager) GetWorkflows(ctx context.Context, currentUsername string) ([]api.Workflow, error) {
 	appsSearchReq := alien4cloud.SearchRequest{
 		Size: 1000000,
 		Filters: map[string][]string{
@@ -71,10 +71,27 @@ func (m *manager) GetWorkflows(ctx context.Context) ([]api.Workflow, error) {
 	var ids []api.Workflow
 	for _, app := range apps {
 		var declaredWF []string
+		// by default if not specified all users are authorized
+		userAuthorized := true
 		for _, tag := range app.Tags {
 			if tag.Key == "hpcwaas-workflows" {
 				declaredWF = strings.Split(tag.Value, ",")
 			}
+			if tag.Key == "hpcwaas-authorized-users" {
+				var found bool
+				for _, user := range strings.Split(tag.Value, ",") {
+					if user == currentUsername {
+						found = true
+						break
+					}
+				}
+				if !found {
+					userAuthorized = false
+				}
+			}
+		}
+		if !userAuthorized {
+			continue
 		}
 		envs, _, err := m.client.ApplicationService().SearchEnvironments(ctx, app.ID, alien4cloud.SearchRequest{
 			Size: 100000,
