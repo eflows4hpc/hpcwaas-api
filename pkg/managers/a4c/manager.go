@@ -2,6 +2,7 @@ package a4c
 
 import (
 	"context"
+	"log"
 	"strings"
 	"sync"
 
@@ -79,6 +80,7 @@ func (m *manager) GetWorkflows(ctx context.Context, currentUsername string) ([]a
 			}
 			if tag.Key == "hpcwaas-authorized-users" {
 				var found bool
+				log.Printf("Checking if %q is in authorized users %q", currentUsername, tag.Value)
 				for _, user := range strings.Split(tag.Value, ",") {
 					if user == currentUsername {
 						found = true

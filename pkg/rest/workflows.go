@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,7 @@ import (
 func (s *Server) getWorkflows(gc *gin.Context) {
 	currentUsername := ""
 	if auth, ok := gc.Get(gin.AuthUserKey); ok {
+		log.Printf("authenticated user %+v", auth)
 		currentUsername = auth.(AuthAccount).Username
 	}
 
