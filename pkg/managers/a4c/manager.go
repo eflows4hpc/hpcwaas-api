@@ -2,21 +2,29 @@ package a4c
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"sync"
 
 	"github.com/alien4cloud/alien4cloud-go-client/v3/alien4cloud"
 	"github.com/eflows4hpc/hpcwaas-api/api"
-	"github.com/pkg/errors"
+	"github.com/eflows4hpc/hpcwaas-api/pkg/ctxauth"
 )
 
 type Manager interface {
-	GetWorkflows(ctx context.Context, currentUsername string) ([]api.Workflow, error)
+	GetWorkflows(ctx context.Context) ([]api.Workflow, error)
 	TriggerWorkflow(ctx context.Context, id string, inputs map[string]interface{}) (string, error)
 
 	GetExecution(ctx context.Context, id string) (alien4cloud.Execution, error)
 	CancelExecution(ctx context.Context, id string) error
+}
+
+var unauthorizedError = errors.New("not authorized")
+
+func IsUnauthorizedError(e error) bool {
+	return errors.Is(e, unauthorizedError)
 }
 
 const DefaultAddress = "http://127.0.0.1:8088"
@@ -57,7 +65,32 @@ func GetManager(c Config) (
 	return m, nil
 }
 
-func (m *manager) GetWorkflows(ctx context.Context, currentUsername string) ([]api.Workflow, error) {
+func checkUserInAuthorizedTag(currentUsername string, tagValue string) bool {
+	log.Printf("Checking if %q is in authorized users %q", currentUsername, tagValue)
+	for _, user := range strings.Split(tagValue, ",") {
+		if user == currentUsername {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *manager) isUserInAuthorizedTag(ctx context.Context, currentUsername, applicationID string) (bool, error) {
+	application, err := m.client.ApplicationService().GetApplicationByID(ctx, applicationID)
+	if err != nil {
+		return false, err
+	}
+	for _, tag := range application.Tags {
+		if tag.Key == "hpcwaas-authorized-users" {
+			return checkUserInAuthorizedTag(currentUsername, tag.Value), nil
+		}
+	}
+	// If hpcwaas-authorized-users not in tags every user is authorized
+	return true, nil
+
+}
+
+func (m *manager) GetWorkflows(ctx context.Context) ([]api.Workflow, error) {
 	appsSearchReq := alien4cloud.SearchRequest{
 		Size: 1000000,
 		Filters: map[string][]string{
@@ -69,6 +102,10 @@ func (m *manager) GetWorkflows(ctx context.Context, currentUsername string) ([]a
 		return nil, err
 	}
 
+	// If no auth and no tags on app this is ok
+	// if no auth and tag then request is not authorized
+	currentUsername, _ := ctxauth.GetCurrentUser(ctx)
+
 	var ids []api.Workflow
 	for _, app := range apps {
 		var declaredWF []string
@@ -79,17 +116,7 @@ func (m *manager) GetWorkflows(ctx context.Context, currentUsername string) ([]a
 				declaredWF = strings.Split(tag.Value, ",")
 			}
 			if tag.Key == "hpcwaas-authorized-users" {
-				var found bool
-				log.Printf("Checking if %q is in authorized users %q", currentUsername, tag.Value)
-				for _, user := range strings.Split(tag.Value, ",") {
-					if user == currentUsername {
-						found = true
-						break
-					}
-				}
-				if !found {
-					userAuthorized = false
-				}
+				userAuthorized = checkUserInAuthorizedTag(currentUsername, tag.Value)
 			}
 		}
 		if !userAuthorized {
@@ -124,11 +151,22 @@ func (m *manager) GetWorkflows(ctx context.Context, currentUsername string) ([]a
 func (m *manager) TriggerWorkflow(ctx context.Context, id string, inputs map[string]interface{}) (string, error) {
 	parts := strings.Split(id, "@")
 	if len(parts) < 3 {
-		return "", errors.Errorf("invalid workflow id %q", id)
+		return "", fmt.Errorf("invalid workflow id %q", id)
 	}
 	appID := parts[0]
 	envID := parts[1]
 	wfID := parts[2]
+
+	// If no auth and no tags on app this is ok
+	// if no auth and tag then request is not authorized
+	currentUsername, _ := ctxauth.GetCurrentUser(ctx)
+	authorized, err := m.isUserInAuthorizedTag(ctx, currentUsername, appID)
+	if err != nil {
+		return "", err
+	}
+	if !authorized {
+		return "", fmt.Errorf("user %q is not authorized to trigger workflow %q: %w", currentUsername, id, unauthorizedError)
+	}
 
 	return m.client.DeploymentService().RunWorkflowAsyncWithParameters(ctx, appID, envID, wfID, inputs, func(exec *alien4cloud.Execution, err error) {})
 }
@@ -141,12 +179,12 @@ func (m *manager) CancelExecution(ctx context.Context, id string) error {
 
 	execution, err := m.client.DeploymentService().GetExecutionByID(ctx, id)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get execution %q", id)
+		return fmt.Errorf("failed to get execution %q: %w", id, err)
 	}
 
 	deployment, err := m.client.DeploymentService().GetDeployment(ctx, execution.DeploymentID)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get deployment %q linked to execution %q", execution.DeploymentID, id)
+		return fmt.Errorf("failed to get deployment %q linked to execution %q: %w", execution.DeploymentID, id, err)
 	}
 
 	return m.client.DeploymentService().CancelExecution(ctx, deployment.EnvironmentID, id)
