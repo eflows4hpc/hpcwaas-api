@@ -8,16 +8,18 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/eflows4hpc/hpcwaas-api/api"
+	"github.com/eflows4hpc/hpcwaas-api/pkg/ctxauth"
+	"github.com/eflows4hpc/hpcwaas-api/pkg/managers/a4c"
 )
 
 func (s *Server) getWorkflows(gc *gin.Context) {
-	currentUsername := ""
+	ctx := gc.Request.Context()
 	if auth, ok := gc.Get(gin.AuthUserKey); ok {
 		log.Printf("authenticated user %+v", auth)
-		currentUsername = auth.(AuthAccount).Username
+		ctx = ctxauth.WithCurrentUser(ctx, auth.(AuthAccount).Username)
 	}
 
-	workflows, err := s.a4cManager.GetWorkflows(gc.Request.Context(), currentUsername)
+	workflows, err := s.a4cManager.GetWorkflows(ctx)
 	if err != nil {
 		writeError(gc, newInternalServerError(err))
 		return
@@ -37,8 +39,18 @@ func (s *Server) triggerWorkflow(gc *gin.Context) {
 		return
 	}
 
-	execID, err := s.a4cManager.TriggerWorkflow(gc.Request.Context(), wfName, inputsReq.Inputs)
+	ctx := gc.Request.Context()
+	if auth, ok := gc.Get(gin.AuthUserKey); ok {
+		log.Printf("authenticated user %+v", auth)
+		ctx = ctxauth.WithCurrentUser(ctx, auth.(AuthAccount).Username)
+	}
+
+	execID, err := s.a4cManager.TriggerWorkflow(ctx, wfName, inputsReq.Inputs)
 	if err != nil {
+		if a4c.IsUnauthorizedError(err) {
+			writeError(gc, newForbiddenRequest(err.Error()))
+			return
+		}
 		writeError(gc, newInternalServerError(err))
 		return
 	}
