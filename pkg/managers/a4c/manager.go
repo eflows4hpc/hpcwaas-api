@@ -18,6 +18,7 @@ type Manager interface {
 	TriggerWorkflow(ctx context.Context, id string, inputs map[string]interface{}) (string, error)
 
 	GetExecution(ctx context.Context, id string) (alien4cloud.Execution, error)
+	GetExecutionLogs(ctx context.Context, id string, fromIndex, size int, levels ...string) ([]alien4cloud.Log, int, error)
 	CancelExecution(ctx context.Context, id string) error
 }
 
@@ -40,7 +41,8 @@ type Config struct {
 }
 
 type manager struct {
-	client alien4cloud.Client
+	client  alien4cloud.Client
+	baseURL string
 }
 
 var l sync.Mutex
@@ -55,6 +57,7 @@ func GetManager(c Config) (
 	}
 
 	m := &manager{}
+	m.baseURL = c.Address
 	var err error
 	m.client, err = alien4cloud.NewClient(c.Address, c.User, c.Password, c.CaFile, c.SkipSecure)
 	if err != nil {
@@ -173,6 +176,14 @@ func (m *manager) TriggerWorkflow(ctx context.Context, id string, inputs map[str
 
 func (m *manager) GetExecution(ctx context.Context, id string) (alien4cloud.Execution, error) {
 	return m.client.DeploymentService().GetExecutionByID(ctx, id)
+}
+
+func (m *manager) GetExecutionLogs(ctx context.Context, id string, fromIndex, size int, levels ...string) ([]alien4cloud.Log, int, error) {
+	filters := alien4cloud.LogFilter{
+		ExecutionID: []string{id},
+		Level:       levels,
+	}
+	return m.getLogsOfExecution(ctx, id, filters, fromIndex, size)
 }
 
 func (m *manager) CancelExecution(ctx context.Context, id string) error {

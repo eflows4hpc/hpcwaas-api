@@ -15,6 +15,7 @@ func init() {
 		// output string
 		// maxlength int
 		follow bool
+		logs   bool
 		inputs []string
 	)
 	var workflowsTriggerCmd = &cobra.Command{
@@ -34,15 +35,16 @@ The workflow should be referenced by its fully qualified ID.
 			if follow {
 				output = TextOutput
 			}
-			return triggerWorkflow(client, args[0], inputs, output, follow)
+			return triggerWorkflow(client, args[0], inputs, output, follow, logs)
 		},
 	}
 	workflowsTriggerCmd.Flags().StringSliceVarP(&inputs, "inputs", "i", nil, "Inputs for the workflow. The format is <key>=<value>. Can be specified multiple times.")
 	workflowsTriggerCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow workflow execution status, this implies --output=text.")
+	workflowsTriggerCmd.Flags().BoolVarP(&logs, "logs", "l", false, "Follow workflow execution logs, this implies --output=text.")
 	workflowsCmd.AddCommand(workflowsTriggerCmd)
 }
 
-func triggerWorkflow(client api.HTTPClient, workflowID string, inputs []string, output string, follow bool) error {
+func triggerWorkflow(client api.HTTPClient, workflowID string, inputs []string, output string, follow, logs bool) error {
 	ctx := context.Background()
 	workflowInputs := &api.WorkflowInputs{}
 	for _, input := range inputs {
@@ -64,7 +66,9 @@ func triggerWorkflow(client api.HTTPClient, workflowID string, inputs []string, 
 	spinner.Success("Workflow triggered with execution ID: ", executionID)
 
 	if follow {
-		return executionStatus(client, executionID, output, follow)
+		return executionStatus(client, executionID, output, true)
+	} else if logs {
+		return executionLogs(client, executionID, 0, output, true, false)
 	}
 	return nil
 }
