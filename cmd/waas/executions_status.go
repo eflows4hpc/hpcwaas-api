@@ -18,11 +18,8 @@ func init() {
 		Use:     "status <execution-id>",
 		Aliases: []string{"stat", "get", "g", "s"},
 		Short:   "Get status of an execution",
-		Long: `Get status of an execution given its ID:
-
-
-		`,
-		Args: cobra.ExactArgs(1),
+		Long:    `Get status of an execution given its ID:`,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := api.GetClient(*clientConfig)
 			if err != nil {
@@ -76,8 +73,7 @@ func displayExecution(httpClient api.HTTPClient, execution api.Execution, follow
 			Text:  "Execution",
 		},
 	}
-	prefix.Printf("ID: %s\n", execution.ID)
-	prefix.Printf("Status: %s", execution.Status)
+	prefix.Printf("ID: %s, Status: %s", execution.ID, execution.Status)
 
 	if follow {
 		// Clear line
@@ -89,7 +85,8 @@ func displayExecution(httpClient api.HTTPClient, execution api.Execution, follow
 }
 
 func followExecution(httpClient api.HTTPClient, execution api.Execution) error {
-	spinner, _ := pterm.DefaultSpinner.Start("Status: ", execution.Status)
+	text := fmt.Sprintf("Execution ID: %s, Status: %s", execution.ID, execution.Status)
+	spinner, _ := pterm.DefaultSpinner.Start(text)
 	for strings.HasSuffix(strings.ToLower(execution.Status), "ing") {
 		time.Sleep(5 * time.Second)
 		var err error
@@ -100,14 +97,15 @@ func followExecution(httpClient api.HTTPClient, execution api.Execution) error {
 			spinner.Fail("Fail to get execution status")
 			return err
 		}
-		spinner.UpdateText(fmt.Sprintf("Status: %s", execution.Status))
+		text = fmt.Sprintf("Execution ID: %s, Status: %s", execution.ID, execution.Status)
+		spinner.UpdateText(text)
 	}
 
 	switch strings.ToLower(execution.Status) {
 	case "failed", "cancelled":
-		spinner.Fail(fmt.Sprintf("Status: %s", execution.Status))
+		spinner.Fail(text)
 	default:
-		spinner.Success(fmt.Sprintf("Status: %s", execution.Status))
+		spinner.Success(text)
 	}
 
 	return nil

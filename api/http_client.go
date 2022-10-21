@@ -70,7 +70,7 @@ func GetClient(cc Configuration) (HTTPClient, error) {
 	httpClient := cc.HttpClient
 	if httpClient == nil {
 		httpClient = &http.Client{
-			Timeout: 1 * time.Minute,
+			Timeout: 10 * time.Minute,
 		}
 	}
 

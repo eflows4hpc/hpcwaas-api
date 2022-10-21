@@ -138,6 +138,54 @@ HTTP/1.1 202 Accepted
 Content-Length: 0
 ```
 
+#### Get logs of a workflow execution
+
+This API endpoint allows the *end-user* to get logs of an execution.
+
+This endpoint implements a long polling mechanism, meaning that the response will be returned only if
+new logs are founds or if a given timeout (see query parameters bellow) is reached.
+This means that an empty array for logs could be returned in a `200 OK` response if no new logs are found and
+the timeout is reached.
+
+This endpoint supports pagination of results using the `from` and `size` parameters described below.
+
+##### Request
+
+`GET /executions/<execution_id>/logs?from=0&timeout=1m&size=-1&levels=0`
+
+Query parameters:
+
+* `from` (default `0`): Used for pagination, get logs from `from` index
+* `size` (default `-1`): Used for pagination, get up to `size` log entries
+* `timeout` (default `1m`): Long polling maximum duration
+* `levels` (default `0` meaning `INFO` + `WARN` + `ERROR`): Bitmask enumeration with `DEBUG=1`, `INFO=2`, `WARN=4`, `ERROR=8` (Ex: `15` means all logs, `9` means `DEBUG` + `ERROR`, ...)
+
+##### Response
+
+```
+HTTP/1.1 200 Accepted
+Content-Type: application/json
+```
+
+```json
+{
+  "logs": [
+    {
+      "level": "INFO",
+      "timestamp": "2022-10-20T12:32:29.774Z",
+      "content": "Workflow \"exec_job\" ended successfully"
+    },
+    {
+      "level": "INFO",
+      "timestamp": "2022-10-20T12:32:29.797Z",
+      "content": "Status for workflow \"exec_job\" changed to \"done\""
+    }
+  ],
+  "total_results": 205,
+  "from": 203
+}
+```
+
 #### Create an SSH Key Pair
 
 This API endpoint allows the *end-user* to create an SSH Key Pair and to optionally attach metadata to it.
