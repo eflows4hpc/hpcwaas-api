@@ -3,10 +3,13 @@ package rest
 import (
 	"log"
 
+	"github.com/eflows4hpc/hpcwaas-api/pkg/util"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
+
+const SessionName = "hpcwaas-session"
 
 func (s *Server) setupRoutes() {
 	s.setupStore()
@@ -38,14 +41,15 @@ func (s *Server) setupAuth(group *gin.RouterGroup) {
 	case "sso":
 		log.Println("Using SSO authentication")
 		s.initSsoConf()
-		group.Use(s.ssoAuth(s.Config.Auth.OAuth))
+		group.Use(s.ssoAuth(s.Config.Auth.OAuth2))
 	default:
 		log.Printf("Invalid authentication type*: '%s'", auth.AuthType)
 	}
 }
 
 func (s *Server) setupStore() {
+	storeSecret := util.SecureRandomBytes(64)
 	store := cookie.NewStore(storeSecret)
-	session := sessions.Sessions(sessionName, store)
+	session := sessions.Sessions(SessionName, store)
 	s.router.Use(session)
 }

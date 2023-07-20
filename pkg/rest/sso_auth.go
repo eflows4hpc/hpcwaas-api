@@ -1,11 +1,12 @@
 package rest
 
 import (
-	"crypto/rand"
+	"encoding/base64"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/eflows4hpc/hpcwaas-api/pkg/util"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 )
@@ -23,25 +24,18 @@ var (
 		Scopes:       []string{"profile", "email", "eflows"},
 		RedirectURL:  "http://localhost:9090/auth/authorize",
 	}
-	sessionName     string        = "hpcwaas"
-	userKey         string        = "user_key"
 	sessionDuration time.Duration = time.Hour * 24
-	storeSecret     []byte        = []byte("secret")
-	state           string        = "constant_state" // TODO: randomize
 )
 
-// SecureRandomBytes returns the requested number of bytes using crypto/rand
-func SecureRandomBytes(length int) []byte {
-	var randomBytes = make([]byte, length)
-	_, err := rand.Read(randomBytes)
-	if err != nil {
-		log.Fatal("Unable to generate random bytes")
-	}
-	return randomBytes
+// getRandomState returns a number of random bytes, encoded in base64
+func getRandomState(length int) string {
+	randomBytes := util.SecureRandomBytes(length)
+	return base64.StdEncoding.EncodeToString(randomBytes)
 }
 
 func (s *Server) initSsoConf() {
-	s.Config.Auth.OAuth = oauthConf
+	s.Config.Auth.State = getRandomState(64)
+	s.Config.Auth.OAuth2 = oauthConf
 }
 
 func (s *Server) ssoAuth(oauthConf *oauth2.Config) gin.HandlerFunc {
@@ -58,18 +52,14 @@ func (s *Server) ssoAuth(oauthConf *oauth2.Config) gin.HandlerFunc {
 
 		if userSession == nil || userSession.IsExpired() {
 			// User is not logged in, we redirect to authorize endpoint
-			url := oauthConf.AuthCodeURL(state)
+			url := oauthConf.AuthCodeURL(s.Config.Auth.State)
 			gc.Redirect(http.StatusTemporaryRedirect, url)
 			return
 		}
 
 		if userSession.IsTokenExpired() {
-			userSession.RefreshToken(s.Config.Auth.OAuth)
+			userSession.RefreshToken(s.Config.Auth.OAuth2)
 		}
 		gc.Next()
 	}
-}
-
-func checkUser() (string, bool) {
-	return "bruno", true
 }

@@ -7,7 +7,6 @@ import (
 )
 
 func (s *Server) login(gc *gin.Context) {
-	// TODO: randomize state here
-	url := s.Config.Auth.OAuth.AuthCodeURL(state)
+	url := s.Config.Auth.OAuth2.AuthCodeURL(s.Config.Auth.State)
 	gc.Redirect(http.StatusSeeOther, url)
 }

@@ -18,7 +18,9 @@ type Config struct {
 type AuthConfig struct {
 	AuthType  string           `mapstructure:"auth_type,omitempty"`
 	BasicAuth *BasicAuthConfig `mapstructure:"basic_auth,omitempty"`
-	OAuth     *oauth2.Config
+	OAuth2    *oauth2.Config
+	// Random state to protect against Cross-Site Request Forgery (CSRF)
+	State string
 }
 
 type BasicAuthConfig struct {

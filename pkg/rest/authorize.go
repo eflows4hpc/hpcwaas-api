@@ -11,17 +11,16 @@ import (
 )
 
 func (s *Server) authorize(gc *gin.Context) {
-	fmt.Printf("\nRequest: %+v\n\n", gc.Request)
 	// Check state
 	requestState := gc.Request.FormValue("state")
-	if requestState != state {
+	if requestState != s.Config.Auth.State {
 		writeError(gc, newBadRequestMessage("request state doesn't match session state"))
 		return
 	}
 
 	// Exchange code
 	authorizationCode := gc.Request.FormValue("code")
-	token, err := s.Config.Auth.OAuth.Exchange(context.Background(), authorizationCode)
+	token, err := s.Config.Auth.OAuth2.Exchange(context.Background(), authorizationCode)
 	if err != nil {
 		writeError(gc, newInternalServerError(err))
 		return
@@ -65,5 +64,5 @@ func (s *Server) getUserInfo(ctx context.Context, accessToken string) (*api.User
 		return nil, err
 	}
 
-	return &res, err
+	return &res, nil
 }
