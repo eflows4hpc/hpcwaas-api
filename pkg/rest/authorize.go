@@ -46,7 +46,7 @@ func (s *Server) authorize(gc *gin.Context) {
 
 func (s *Server) getUserInfo(ctx context.Context, accessToken string) (*api.UserInfo, error) {
 	var res api.UserInfo
-	url := userInfoEndpoint
+	url := s.Config.Auth.UserInfoURL
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create http request")

@@ -30,7 +30,8 @@ func (s *Server) StartServer() error {
 		return err
 	}
 	defer vault.CloseRenewers()
-	s.store = store.NewStore(sessionDuration)
+
+	s.store = store.NewStore(s.Config.Auth.SessionDuration)
 
 	s.router = gin.Default()
 	s.setupRoutes()

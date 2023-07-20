@@ -24,8 +24,9 @@ type store struct {
 
 // Instanciate a store
 //
-// sessionDuration is the maximum length of a user session
-func NewStore(sessionDuration time.Duration) Store {
+// sessionMaxSeconds is the maximum length of a user session, in seconds
+func NewStore(sessionMaxSeconds int64) Store {
+	sessionDuration := time.Duration(sessionMaxSeconds) * time.Second
 	return &store{
 		sessionDuration: sessionDuration,
 		userSessions:    map[string]*UserSession{},

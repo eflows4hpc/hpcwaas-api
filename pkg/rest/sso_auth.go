@@ -4,27 +4,10 @@ import (
 	"encoding/base64"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/eflows4hpc/hpcwaas-api/pkg/util"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
-)
-
-var (
-	unityEndpoint oauth2.Endpoint = oauth2.Endpoint{
-		AuthURL:  "https://zam10045.zam.kfa-juelich.de:7000/oauth2-as/oauth2-authz",
-		TokenURL: "https://zam10045.zam.kfa-juelich.de:7000/oauth2/token",
-	}
-	userInfoEndpoint string         = "https://zam10045.zam.kfa-juelich.de:7000/oauth2/userinfo"
-	oauthConf        *oauth2.Config = &oauth2.Config{
-		ClientID:     "580b8e3e-b4f8-444a-8f04-841a1dd3453b",
-		ClientSecret: "b41b1c24-58de-487d-bfc2-e3892ecd2f45",
-		Endpoint:     unityEndpoint,
-		Scopes:       []string{"profile", "email", "eflows"},
-		RedirectURL:  "http://localhost:9090/auth/authorize",
-	}
-	sessionDuration time.Duration = time.Hour * 24
 )
 
 // getRandomState returns a number of random bytes, encoded in base64
@@ -34,8 +17,18 @@ func getRandomState(length int) string {
 }
 
 func (s *Server) initSsoConf() {
+	auth := s.Config.Auth
+	s.Config.Auth.OAuth2 = &oauth2.Config{
+		ClientID:     auth.ClientID,
+		ClientSecret: auth.ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  auth.AuthURL,
+			TokenURL: auth.TokenURL,
+		},
+		Scopes:      auth.Scopes,
+		RedirectURL: auth.RedirectURL,
+	}
 	s.Config.Auth.State = getRandomState(64)
-	s.Config.Auth.OAuth2 = oauthConf
 }
 
 func (s *Server) ssoAuth(oauthConf *oauth2.Config) gin.HandlerFunc {
