@@ -4,14 +4,13 @@ import (
 	"errors"
 	"time"
 
-	"github.com/eflows4hpc/hpcwaas-api/api"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 )
 
 type Store interface {
-	SaveSession(gc *gin.Context, userInfo *api.UserInfo, token *oauth2.Token) error
+	SaveSession(gc *gin.Context, userInfo *UserInfo, token *oauth2.Token) error
 	LoadSession(gc *gin.Context) (*UserSession, error)
 	ClearSession(gc *gin.Context) (bool, error)
 }
@@ -36,7 +35,7 @@ func NewStore(sessionMaxSeconds int64) Store {
 // Save user session
 //
 // No argument may be nil
-func (s *store) SaveSession(gc *gin.Context, userInfo *api.UserInfo, token *oauth2.Token) error {
+func (s *store) SaveSession(gc *gin.Context, userInfo *UserInfo, token *oauth2.Token) error {
 	if gc == nil {
 		return errors.New("empty Gin context")
 	}

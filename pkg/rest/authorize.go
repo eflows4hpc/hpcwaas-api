@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/eflows4hpc/hpcwaas-api/api"
+	"github.com/eflows4hpc/hpcwaas-api/pkg/store"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 )
@@ -44,8 +45,8 @@ func (s *Server) authorize(gc *gin.Context) {
 	gc.String(http.StatusOK, msg)
 }
 
-func (s *Server) getUserInfo(ctx context.Context, accessToken string) (*api.UserInfo, error) {
-	var res api.UserInfo
+func (s *Server) getUserInfo(ctx context.Context, accessToken string) (*store.UserInfo, error) {
+	var res store.UserInfo
 	url := s.Config.Auth.UserInfoURL
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

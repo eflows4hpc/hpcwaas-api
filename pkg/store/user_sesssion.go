@@ -4,17 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/eflows4hpc/hpcwaas-api/api"
 	"golang.org/x/oauth2"
 )
 
 type UserSession struct {
-	UserInfo api.UserInfo
+	UserInfo UserInfo
 	Token    oauth2.Token
 	ExpireAt time.Time
 }
 
-func NewUserSession(userInfo api.UserInfo, token oauth2.Token, validity time.Duration) *UserSession {
+func NewUserSession(userInfo UserInfo, token oauth2.Token, validity time.Duration) *UserSession {
 	userSession := UserSession{
 		UserInfo: userInfo,
 		Token:    token,
