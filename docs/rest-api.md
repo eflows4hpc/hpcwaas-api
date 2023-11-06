@@ -1,37 +1,27 @@
 # eflows4HPC REST API to trigger workflows
 
-**Status:** Draft
-
 ## Abstract
 
-This API is designed to be used by eflows4HPC *end-users*. It should allow to:
+This API is designed to be used by *end-users* of the workflows deployed using the eFlows4HPC HPCWaaS interface. It allows to:
 
 * list available workflows
 * trigger a workflow execution
 * monitor a workflow execution
 * cancel a workflow execution
 
-Design of workflows themself is out of the scope of this API and is done by another user called *developer* in the Alien4Cloud application.
+The design of workflows themself is out of the scope of this API and is done by another user called *developer* in the Alien4Cloud application.
 
-### Open questions
-
-* [ ] should we have an endpoint to list workflows executions? (Priority 1)
-* [ ] should we have an endpoint to describe a workflow (typically expected inputs / outputs)? (Priority 1)
-* [ ] should we have an endpoint to stream logs/events? (Events Priority 3 / Logs Priority 4)
-* [ ] Authentication / Authorization (see below)
-
-## API Design
+## API
 
 ### Authentication / Authorization
 
-While this is identified as a mandatory feature, there is only an optional HTTP Basic authentication implemented in the first MVP
-(Minimum Viable Product).
+It is using the HTTP Basic authentication. It is also in the process of integrating with Unity Single Sign-On service
 
 ### API Endpoints
 
 #### List available workflows
 
-This API endpoint allows to list workflows that could be triggered by a *end-user*
+This API endpoint provides the workflows that could be triggered by an *end-user*
 
 ***TODO***: should probably handle pagination
 
@@ -71,8 +61,6 @@ Content-Type: application/json
 
 This API endpoint allows the *end-user* to trigger a workflow execution
 
-***TODO***: should refine inputs
-
 ##### Request
 
 `POST /workflows/<workflow_name>`
@@ -97,8 +85,6 @@ Content-Length: 0
 #### Monitor a workflow execution
 
 This API endpoint allows the *end-user* to monitor a workflow execution
-
-***TODO:*** Should work on the response model
 
 ##### Request
 
