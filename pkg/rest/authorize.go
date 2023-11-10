@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"path"
 
 	"github.com/eflows4hpc/hpcwaas-api/api"
 	"github.com/eflows4hpc/hpcwaas-api/pkg/store"
@@ -41,7 +43,26 @@ func (s *Server) authorize(gc *gin.Context) {
 		return
 	}
 
-	msg := fmt.Sprintf("\tLog in successful\nWelcome %s %s\nYou can now use HPCWaaS", userInfo.FirstName, userInfo.Surname)
+	// Save session to autologin file
+	userSession, err := s.store.LoadSession(gc)
+	if err != nil {
+		writeError(gc, newInternalServerError(err))
+		return
+	}
+	home := os.Getenv("HOME")
+	autologin := path.Join(home, ".waas_autologin")
+	err = userSession.Write(autologin)
+	if err != nil {
+		writeError(gc, newInternalServerError(err))
+		return
+	}
+
+	msg := fmt.Sprintf(`	Log in successful
+
+Welcome %s %s
+You can now use HPCWaaS
+`, userInfo.FirstName, userInfo.Surname)
+
 	gc.String(http.StatusOK, msg)
 }
 
