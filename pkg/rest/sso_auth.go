@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"encoding/base64"
 	"log"
 	"net/http"
 
@@ -12,8 +11,7 @@ import (
 
 // getRandomState returns a number of random bytes, encoded in base64
 func getRandomState(length int) string {
-	randomBytes := util.SecureRandomBytes(length)
-	return base64.StdEncoding.EncodeToString(randomBytes)
+	return util.SecureRandomSecret(length)
 }
 
 func (s *Server) initSsoConf() {
