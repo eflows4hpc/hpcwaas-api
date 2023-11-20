@@ -110,6 +110,7 @@ const certFileFlagName = "cert_file"
 const caFileFlagName = "ca_file"
 const caPathFlagName = "ca_path"
 const userFlagName = "user"
+const accessTokenFlagName = "access_token"
 
 func init() {
 	cobra.OnInitialize(initConfig)
@@ -120,7 +121,7 @@ func init() {
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVarP(&output, "output", "o", DefaultDisplayOutput, "Output format either \"text\" or \"json\".")
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.hpcwaas-api.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.waas)")
 	rootCmd.PersistentFlags().String(apiURLFlagName, api.DefaultAPIAddress, "The default URL used to connect to the API")
 	rootCmd.PersistentFlags().Bool(skipTLSVerifyFlagName, false, "Either or not to skip SSL certificates validation")
 	rootCmd.PersistentFlags().String(caFileFlagName, "", "CA File to use to validate SSL certificates")
@@ -136,6 +137,7 @@ If the password is not specified, it will be prompted for.
 The user name and passwords are split up on the first colon, which makes it impossible to use a colon in the user name.
 However, the password can contains colons.
 `)
+	rootCmd.PersistentFlags().StringP(accessTokenFlagName, "t", "", "Access token for authentication")
 
 	// Global flags/config binding
 	viper.BindPFlag(apiURLFlagName, rootCmd.PersistentFlags().Lookup(apiURLFlagName))
@@ -145,6 +147,7 @@ However, the password can contains colons.
 	viper.BindPFlag(keyFileFlagName, rootCmd.PersistentFlags().Lookup(keyFileFlagName))
 	viper.BindPFlag(certFileFlagName, rootCmd.PersistentFlags().Lookup(certFileFlagName))
 	viper.BindPFlag(userFlagName, rootCmd.PersistentFlags().Lookup(userFlagName))
+	viper.BindPFlag(accessTokenFlagName, rootCmd.PersistentFlags().Lookup(accessTokenFlagName))
 
 	//Environment Variables
 	viper.SetEnvPrefix("HW") // HW == HpcWaas
@@ -158,6 +161,7 @@ However, the password can contains colons.
 	viper.BindEnv(keyFileFlagName)
 	viper.BindEnv(certFileFlagName)
 	viper.BindEnv(userFlagName)
+	viper.BindEnv(accessTokenFlagName)
 
 	// Global defaults
 	viper.SetDefault(apiURLFlagName, api.DefaultAPIAddress)
@@ -180,6 +184,7 @@ func initConfig() {
 		// Search config in home directory with name ".waas" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".waas")
+		viper.SetConfigType("yaml")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
