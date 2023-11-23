@@ -2,10 +2,9 @@ package rest
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
-	"os"
-	"path"
 
 	"github.com/eflows4hpc/hpcwaas-api/api"
 	"github.com/eflows4hpc/hpcwaas-api/pkg/store"
@@ -36,32 +35,22 @@ func (s *Server) authorize(gc *gin.Context) {
 		return
 	}
 
-	// Save user info and token
-	err = s.store.SaveSession(gc, userInfo, token)
+	// Start a new session with user info and token
+	err = s.store.CreateSession(gc, userInfo, token.AccessToken)
 	if err != nil {
 		writeError(gc, newInternalServerError(err))
 		return
 	}
 
-	// Save session to autologin file
-	userSession, err := s.store.LoadSession(gc)
-	if err != nil {
-		writeError(gc, newInternalServerError(err))
-		return
-	}
-	home := os.Getenv("HOME")
-	autologin := path.Join(home, ".waas_autologin")
-	err = userSession.Write(autologin)
-	if err != nil {
-		writeError(gc, newInternalServerError(err))
-		return
-	}
-
+	encodedToken := base64.StdEncoding.EncodeToString([]byte(token.AccessToken))
 	msg := fmt.Sprintf(`	Log in successful
 
 Welcome %s %s
 You can now use HPCWaaS
-`, userInfo.FirstName, userInfo.Surname)
+
+For using the CLI, please use the following token:
+	%s
+`, userInfo.FirstName, userInfo.Surname, encodedToken)
 
 	gc.String(http.StatusOK, msg)
 }

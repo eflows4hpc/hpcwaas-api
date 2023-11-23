@@ -28,7 +28,6 @@ func (s *Server) setupRoutes() {
 	{
 		authGrp.GET("/login", s.login)
 		authGrp.GET("/authorize", s.authorize)
-		authGrp.GET("/logout", s.logout)
 	}
 }
 

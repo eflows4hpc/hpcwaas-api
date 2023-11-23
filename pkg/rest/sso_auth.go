@@ -1,12 +1,17 @@
 package rest
 
 import (
+	"encoding/base64"
 	"log"
-	"net/http"
+	"regexp"
 
 	"github.com/eflows4hpc/hpcwaas-api/pkg/util"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
+)
+
+var (
+	bearerPattern = regexp.MustCompile("^Bearer *([^ ]+) *$")
 )
 
 // getRandomState returns a number of random bytes, encoded in base64
@@ -35,22 +40,29 @@ func (s *Server) ssoAuth(oauthConf *oauth2.Config) gin.HandlerFunc {
 	}
 
 	return func(gc *gin.Context) {
-		userSession, err := s.store.LoadSession(gc)
+		authorization := gc.Request.Header.Get("Authorization")
+		if authorization == "" {
+			writeError(gc, newUnauthorizedRequest(gc, "Authorization Required"))
+			return
+		}
+		if !bearerPattern.MatchString(authorization) {
+			writeError(gc, newUnauthorizedRequest(gc, "Invalid authorization format"))
+			return
+		}
+		base64AccessToken := bearerPattern.FindStringSubmatch(authorization)[1]
+		bytesAccessToken, err := base64.StdEncoding.DecodeString(base64AccessToken)
 		if err != nil {
-			writeError(gc, newInternalServerError(err))
+			writeError(gc, newUnauthorizedRequest(gc, "Invalid authorization token"))
+			return
+		}
+		accessToken := string(bytesAccessToken)
+
+		userSession, err := s.store.GetSession(gc, accessToken)
+		if err != nil || userSession == nil || userSession.IsExpired() {
+			writeError(gc, newUnauthorizedRequest(gc, "You are not logged in or your session has expired"))
 			return
 		}
 
-		if userSession == nil || userSession.IsExpired() {
-			// User is not logged in, we redirect to authorize endpoint
-			url := oauthConf.AuthCodeURL(s.Config.Auth.State)
-			gc.Redirect(http.StatusTemporaryRedirect, url)
-			return
-		}
-
-		if userSession.IsTokenExpired() {
-			userSession.RefreshToken(s.Config.Auth.OAuth2)
-		}
 		gc.Next()
 	}
 }

@@ -26,7 +26,11 @@ type AuthConfig struct {
 	SessionDuration int64            `mapstructure:"session_duration,omitempty"`
 	ClientID        string           `mapstructure:"client_id,omitempty"`
 	ClientSecret    string           `mapstructure:"client_secret,omitempty"`
-	OAuth2          *oauth2.Config
+
+	// Authentication parameters, to be setup at server start
+
+	// OAuth2 confiuguration
+	OAuth2 *oauth2.Config
 	// Random state to protect against Cross-Site Request Forgery (CSRF)
 	State string
 }
