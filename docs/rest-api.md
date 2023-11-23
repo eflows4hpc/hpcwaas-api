@@ -24,10 +24,40 @@ Design of workflows themself is out of the scope of this API and is done by anot
 
 ### Authentication / Authorization
 
-While this is identified as a mandatory feature, there is only an optional HTTP Basic authentication implemented in the first MVP
-(Minimum Viable Product).
+HPCWaaS handles authentication with the OAuth 2 protocol. Identities are managed by the Unity identity provider. Authentication in HPCWaaS is a two-ste process:
+
+* Step 1: Retrieve an **access token** by visiting the `/auth/login` endpoint in your browser.
+* Step 2: Use the token for sending requests to the API.
+
+#### Authenticating with the REST API
+
+For accessing the REST API with a general utility like `curl`, you need to pass the token in the header, e.g.  
+`curl -H "Authorization: Bearer <access_token>" ...`  
+
+#### Authenticating with the CLI utility
+
+For the `waas` CLI utility, you can pass the token in three different places:
+
+* In the WaaS config file with the `access_token` key, e.g.  
+  `access_token: <access_token>`
+* In the `HW_ACCESS_TOKEN` environment variable, e.g.  
+  `export HW_ACCESS_TOKEN=<access_token>`
+* In the command-line options, e.g.  
+  `waas workflows list -t=<access_token>`  
+  or  
+  `waas workflows list --access_token=<access_token>` 
+
+The parameters take precendence in the following order: command-line option > environment variable > config file.
 
 ### API Endpoints
+
+#### Request authentication token
+
+This API endpoint is to be used in a browser. It allows, after logging in to a Unity server, to retrieve an **access token** that is needed to authenticate when accessing other endpoints.
+
+##### Endpoint
+
+`/auth/login`
 
 #### List available workflows
 
