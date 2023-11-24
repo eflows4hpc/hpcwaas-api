@@ -1,0 +1,22 @@
+auth:
+  # Supported authentication types: basic, sso
+  auth_type: sso
+  # The endpoint to authenticate users
+  auth_url: <authentication_server_url>/oauth2-as/oauth2-authz
+  # The endpoint to retrieve tokens
+  token_url: <authentication_server_url>/oauth2/token
+  # The endpoint to get user info
+  user_info_url: <authentication_server_url>/oauth2/userinfo
+  # The URL where the server should redirect the token
+  redirect_url: <api_url>/auth/authorize
+  # The authentication scopes
+  scopes:
+    - profile
+    - email
+    - eflows
+  # Maximum length of a user session, in seconds
+  session_duration: 86400
+  # The client ID attributed by the SSO provider
+  client_id: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  # The client secret attributed by the SSO provider
+  client_secret: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX

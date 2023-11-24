@@ -1,0 +1,8 @@
+# waas CLI configuration file
+
+# The URL of the HPCWaaS server API
+#api_url: "https://www.your-server.com/waas"
+
+# The access token used for authentication with Unity
+# To get or renew the token, open in a browser the <api_url>/auth/login endpoint of your HPCWaaS server
+#access_token: "U1Y3TzBTbjQ0TkJlXzk2WmQzUFRyRzZ0bXZQX093a3FLb3Nha3haSFlFaw=="
