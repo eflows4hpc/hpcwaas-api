@@ -46,11 +46,12 @@ func (s *Server) authorize(gc *gin.Context) {
 	msg := fmt.Sprintf(`	Log in successful
 
 Welcome %s %s
+User ID: %s
 You can now use HPCWaaS
 
 For using the CLI, please use the following token:
 	%s
-`, userInfo.FirstName, userInfo.Surname, encodedToken)
+`, userInfo.FirstName, userInfo.Surname, userInfo.Sub, encodedToken)
 
 	gc.String(http.StatusOK, msg)
 }
