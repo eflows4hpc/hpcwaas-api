@@ -63,6 +63,10 @@ func (s *Server) ssoAuth(oauthConf *oauth2.Config) gin.HandlerFunc {
 			return
 		}
 
+		// Set user ID in context
+		userAccount := AuthAccount{Username: userSession.UserInfo.Sub}
+		gc.Set(gin.AuthUserKey, userAccount)
+
 		gc.Next()
 	}
 }

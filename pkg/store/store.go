@@ -44,7 +44,6 @@ func (s *store) CreateSession(gc *gin.Context, userInfo *UserInfo, accessToken s
 	}
 
 	// Save user ID in store
-	//	gc.Set(gin.AuthUserKey, userInfo.Sub)
 	session := sessions.Default(gc)
 	session.Set(gin.AuthUserKey, userInfo.Sub)
 	err := session.Save()
@@ -75,7 +74,6 @@ func (s *store) GetSession(gc *gin.Context, accessToken string) (*UserSession, e
 		return nil, nil
 	}
 
-	//	gc.Set(gin.AuthUserKey, userSession.UserInfo.Sub)
 	return &userSession, nil
 }
 

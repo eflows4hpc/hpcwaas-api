@@ -42,6 +42,10 @@ func (s *Server) authorize(gc *gin.Context) {
 		return
 	}
 
+	// Set user ID in context
+	userAccount := AuthAccount{Username: userInfo.Sub}
+	gc.Set(gin.AuthUserKey, userAccount)
+
 	encodedToken := base64.StdEncoding.EncodeToString([]byte(token.AccessToken))
 	msg := fmt.Sprintf(`	Log in successful
 
