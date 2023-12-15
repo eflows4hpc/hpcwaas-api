@@ -5,6 +5,7 @@ import (
 
 	"github.com/eflows4hpc/hpcwaas-api/pkg/managers/a4c"
 	"github.com/eflows4hpc/hpcwaas-api/pkg/managers/vault"
+	"github.com/eflows4hpc/hpcwaas-api/pkg/store"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,6 +15,7 @@ type Server struct {
 	router       *gin.Engine
 	a4cManager   a4c.Manager
 	vaultManager vault.Manager
+	store        store.Store
 }
 
 func (s *Server) StartServer() error {
@@ -28,6 +30,8 @@ func (s *Server) StartServer() error {
 		return err
 	}
 	defer vault.CloseRenewers()
+
+	s.store = store.NewStore(s.Config.Auth.SessionDuration)
 
 	s.router = gin.Default()
 	s.setupRoutes()

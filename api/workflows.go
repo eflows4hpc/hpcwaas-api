@@ -48,7 +48,6 @@ func (s *workflowsService) Trigger(ctx context.Context, workflowID string, input
 		return "", errors.Wrap(err, "failed to create http request")
 	}
 	request.Header.Add("Accept", "application/json")
-	request.Header.Add("Content-Type", "application/json")
 
 	response, err := s.client.Do(request)
 	if err != nil {

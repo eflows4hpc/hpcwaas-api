@@ -15,9 +15,48 @@ The design of workflows themself is out of the scope of this API and is done by 
 
 ### Authentication / Authorization
 
-It is using the HTTP Basic authentication. It is also in the process of integrating with Unity Single Sign-On service
+HPCWaaS handles authentication with the OAuth 2 protocol. Identities are managed by the Unity identity provider. Authentication in HPCWaaS is a two-ste process:
+
+* Step 1: Retrieve an **access token** by visiting the `/auth/login` endpoint in your browser.
+* Step 2: Use the token for sending requests to the API.
+
+#### Authenticating with the REST API
+
+For accessing the REST API with a general utility like `curl`, you need to pass the token in the header, e.g.  
+`curl -H "Authorization: Bearer <access_token>" ...`  
+
+#### Authenticating with the CLI utility
+
+For the `waas` CLI utility, you can pass the token in three different places:
+
+* In the WaaS config file with the `access_token` key, e.g.  
+  `access_token: <access_token>`
+* In the `HW_ACCESS_TOKEN` environment variable, e.g.  
+  `export HW_ACCESS_TOKEN=<access_token>`
+* In the command-line options, e.g.  
+  `waas workflows list -t=<access_token>`  
+  or  
+  `waas workflows list --access_token=<access_token>` 
+
+The parameters take precendence in the following order: command-line option > environment variable > config file.
+
+#### Authorization
+
+To make a workflow visible by the `waas` CLI, you need to add the `hpcwaas-workfows` tag to your workflow, in _alien4cloud_. The tag value will be the name of your workflow.  
+By default, workflows are public. This means that they are displayed when any user uses the `wass workflows list` command. To restrict access to a workflow to a user (or a group of users), you need to add the `hpcwaas-authorized-users` tag to your workflow. The tag value is a list of comma-seperated UUID of the users you want to allow access to your workflow.  
+Users can get their Unity UUID by logging in at the `/auth/login` endpoint in their browser.  
+
+**Important note:** Without the `hpcwaas-workflows` tag, your workflow won't be visible from the `waas` CLI, even if the `hpcwaas-authorized-users` tag is defined. So, to make a workflow visible to a user (or a group of users), both tags need to be present.
 
 ### API Endpoints
+
+#### Request authentication token
+
+This API endpoint is to be used in a browser. It allows, after logging in to a Unity server, to retrieve an **access token** that is needed to authenticate when accessing other endpoints. It also displays your Unity UUID, which can be used to restrict the access to your workflow.
+
+##### Endpoint
+
+`/auth/login`
 
 #### List available workflows
 

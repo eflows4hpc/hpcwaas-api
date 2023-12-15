@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/eflows4hpc/hpcwaas-api/pkg/managers/a4c"
 	"github.com/eflows4hpc/hpcwaas-api/pkg/managers/vault"
+	"golang.org/x/oauth2"
 )
 
 const DefaultListenAddress = "0.0.0.0:9090"
@@ -15,7 +16,23 @@ type Config struct {
 }
 
 type AuthConfig struct {
-	BasicAuth *BasicAuthConfig `mapstructure:"basic_auth,omitempty"`
+	AuthType        string           `mapstructure:"auth_type,omitempty"`
+	BasicAuth       *BasicAuthConfig `mapstructure:"basic_auth,omitempty"`
+	AuthURL         string           `mapstructure:"auth_url,omitempty"`
+	TokenURL        string           `mapstructure:"token_url,omitempty"`
+	UserInfoURL     string           `mapstructure:"user_info_url,omitempty"`
+	RedirectURL     string           `mapstructure:"redirect_url,omitempty"`
+	Scopes          []string         `mapstructure:"scopes,omitempty"`
+	SessionDuration int64            `mapstructure:"session_duration,omitempty"`
+	ClientID        string           `mapstructure:"client_id,omitempty"`
+	ClientSecret    string           `mapstructure:"client_secret,omitempty"`
+
+	// Authentication parameters, to be setup at server start
+
+	// OAuth2 confiuguration
+	OAuth2 *oauth2.Config
+	// Random state to protect against Cross-Site Request Forgery (CSRF)
+	State string
 }
 
 type BasicAuthConfig struct {

@@ -99,6 +99,8 @@ func GetClient(cc Configuration) (HTTPClient, error) {
 		client.basicAuthUserPass = url.UserPassword(parts[0], parts[1])
 	}
 
+	client.accessToken = strings.TrimSpace(cc.AccessToken)
+
 	client.workflows = &workflowsService{client: client}
 	client.executions = &executionsService{client: client}
 	client.sshKeys = &sshKeysService{client: client}
@@ -114,6 +116,7 @@ type client struct {
 	sshKeys    SSHKeysService
 
 	basicAuthUserPass *url.Userinfo
+	accessToken       string
 }
 
 func (c *client) Workflows() WorkflowsService {
@@ -123,6 +126,7 @@ func (c *client) Workflows() WorkflowsService {
 func (c *client) Executions() ExecutionsService {
 	return c.executions
 }
+
 func (c *client) SSHKeys() SSHKeysService {
 	return c.sshKeys
 }
@@ -132,6 +136,9 @@ func (c *client) NewRequest(ctx context.Context, method, path string, body io.Re
 	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot create request")
+	}
+	if c.accessToken != "" {
+		req.Header.Add("Authorization", "Bearer "+c.accessToken)
 	}
 
 	req.URL.User = c.basicAuthUserPass
