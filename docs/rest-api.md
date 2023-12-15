@@ -40,11 +40,17 @@ For the `waas` CLI utility, you can pass the token in three different places:
 
 The parameters take precendence in the following order: command-line option > environment variable > config file.
 
+#### Authorization
+
+To make a workflow visible by the `waas` CLI, you need to add the `hpcwaas-workfows` tag to your workflow, in _alien4cloud_. The tag value will be the name of your workflow.  
+By default, workflows are public. This means that they are displayed when any user uses the `wass workflows list` command. To restrict access to a workflow to a user (or a group of users), you need to add the `hpcwaas-authorized-users` tag to your workflow. The tag value is a list of comma-seperated UUID of the users you want to allow access to your workflow.  
+Users can get their Unity UUID by logging in at the `/auth/login` endpoint in their browser.  
+
 ### API Endpoints
 
 #### Request authentication token
 
-This API endpoint is to be used in a browser. It allows, after logging in to a Unity server, to retrieve an **access token** that is needed to authenticate when accessing other endpoints.
+This API endpoint is to be used in a browser. It allows, after logging in to a Unity server, to retrieve an **access token** that is needed to authenticate when accessing other endpoints. It also displays your Unity UUID, which can be used to restrict the access to your workflow.
 
 ##### Endpoint
 
