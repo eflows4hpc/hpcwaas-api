@@ -46,6 +46,8 @@ To make a workflow visible by the `waas` CLI, you need to add the `hpcwaas-workf
 By default, workflows are public. This means that they are displayed when any user uses the `wass workflows list` command. To restrict access to a workflow to a user (or a group of users), you need to add the `hpcwaas-authorized-users` tag to your workflow. The tag value is a list of comma-seperated UUID of the users you want to allow access to your workflow.  
 Users can get their Unity UUID by logging in at the `/auth/login` endpoint in their browser.  
 
+**Important note:** Without the `hpcwaas-workflows` tag, your workflow won't be visible from the `waas` CLI, even if the `hpcwaas-authorized-users` tag is defined. So, to make a workflow visible to a user (or a group of users), both tags need to be present.
+
 ### API Endpoints
 
 #### Request authentication token
