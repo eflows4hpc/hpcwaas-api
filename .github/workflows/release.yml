@@ -21,6 +21,10 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
+      - name: Configure directory access
+        run:
+          git config --global --add safe.directory /github/workspace
+
       - name: build
         uses: docker://golang:1
         with:
