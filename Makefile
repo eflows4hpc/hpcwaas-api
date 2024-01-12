@@ -47,6 +47,7 @@ hpcwaas-api: bin/hpcwaas-api
 waas: bin/waas
 
 dist: tools fmt
+	git config --global --add safe.directory /github/workspace
 	$(GOX_BUILD) ./cmd/waas
 	./scripts/dist.sh
 
