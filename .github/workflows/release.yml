@@ -24,7 +24,7 @@ jobs:
       - name: build
         uses: docker://golang:1
         with:
-          args: /bin/bash -c "apt-get update && apt-get install -y zip && make dist"
+          args: /bin/bash -c "git config --global --add safe.directory /github/workspace && apt-get update && apt-get install -y zip && make dist"
         env:
           XDG_CACHE_HOME: /tmp/.cache
           HOME: /tmp/buildhome
